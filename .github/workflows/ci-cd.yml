@@ -38,6 +38,8 @@ jobs:
           node-version: 22
           cache: yarn
       
+      - run: yarn install --frozen-lockfile
+
       - name: Build app
         run: yarn build
     
