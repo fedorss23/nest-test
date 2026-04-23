@@ -1,0 +1,73 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      
+      - run: yarn install --frozen-lockfile
+      
+      - name: Run tests
+        run: yarn test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    needs: [test]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      
+      - run: yarn install --frozen-lockfile
+
+      - name: Build app
+        run: yarn build
+    
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: action/checkout@4
+
+      - name: Login to GHCR
+        run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build image
+        run: docker build -t ghrc.io/${{ github.repository }}/myapp:${{ github.sha }}
+
+      - name: Push image
+        run: docker push ghrc.io/${{ github.repository }}/myapp:${{ github.sha }}
+
+      - name: Deploy with ssh
+        uses: appleboy/ssh-action@1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ghrc.io/${{ github.repository }}/myapp:${{ github.sha }}
+            docker stop myapp || true
+            docker rm myapp || true
+            docker run -d -p 80:3000 --name myapp ghrc.io/${{ github.repository }}/myapp:${{ github.sha }}
+      
