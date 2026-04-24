@@ -64,6 +64,9 @@ jobs:
       - name: Copy compose
         run: scp -i ${{ secrets.SSH_PRIVATE_KEY }} docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/project/
 
+      - name: Copy nginx config
+        run: scp -i ${{ secrets.SSH_PRIVATE_KEY }} nginx.conf ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/project/
+
       - name: Deploy with ssh
         uses: appleboy/ssh-action@v1.0.2
         with:
