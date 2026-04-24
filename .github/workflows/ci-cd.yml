@@ -59,8 +59,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir project
             cd project
+            rm -rf nest-test
 
             minikube start
 
