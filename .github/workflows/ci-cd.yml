@@ -60,6 +60,9 @@ jobs:
 
       - name: Push image
         run: docker push ${{ secrets.DOCKERHUB_NAME }}/myapp:latest
+      
+      - name: Copy compose
+        run: scp -i ${{ secrets.SSH_PRIVATE_KEY }} docker-compose.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/project/
 
       - name: Deploy with ssh
         uses: appleboy/ssh-action@v1.0.2
