@@ -52,33 +52,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login to Docker hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_NAME }} --password-stdin
-
-      - name: Build image
-        run: docker build -t ${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }} .
-
-      - name: Push image
-        run: docker push ${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}
-      
-      - name: Copy docker compose
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: 'docker-compose.yml'
-          target: '~/project/'
-
-      - name: Copy nginx config
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: 'nginx.conf'
-          target: '~/project/'
-
       - name: Deploy with ssh
         uses: appleboy/ssh-action@v1.0.2
         with:
@@ -86,8 +59,22 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            mkdir project
             cd project
-            docker pull ${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}
-            echo "IMAGE_NAME=${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}" > .env
-            docker compose up -d --pull always
+
+            minikube start
+
+            git init
+            git clone https://github.com/fedorss23/nest-test.git
+            cd nest-test
+
+            docker build -t myapp:latest .
+            minikube image load myapp:latest
+
+            cd k8s
+            kubectl apply -f namespace.yml
+            kubectl apply -f backend/deployment.yml
+            kubectl apply -f backend/service.yml
+            kubectl apply -f ingress/ingress.yml
+
       
