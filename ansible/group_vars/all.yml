@@ -1,2 +1,2 @@
-deploy_user: deploy
+deploy_user: am
 deploy_public_key: "{{ lookup('env', 'DEPLOY_PUBLIC_KEY') }}"
