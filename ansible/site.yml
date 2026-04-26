@@ -4,6 +4,6 @@
     - common
     - docker
     - kubectl
-    - minikube
+    - k3s
     - firewall
     - deploy-user
