@@ -1,0 +1,18 @@
+- name: Download Minikube package
+  get_url:
+    url: https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+    dest: /tmp/minikube_latest_amd64.deb
+    mode: '0644'
+
+- name: Install Minikube
+  apt:
+    deb: /tmp/minikube_latest_amd64.deb
+
+- name: Verify Minikube installed
+  command: minikube version
+  register: minikube_version
+  changed_when: false
+
+- name: Show Minikube version
+  debug:
+    var: minikube_version.stdout

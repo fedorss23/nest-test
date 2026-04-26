@@ -1,0 +1,9 @@
+- hosts: server
+  become: true
+  roles:
+    - common
+    - deploy-user
+    - docker
+    - kubectl
+    - minikube
+    - firewall
