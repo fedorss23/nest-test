@@ -2,8 +2,8 @@
   become: true
   roles:
     - common
-    - deploy-user
     - docker
     - kubectl
     - minikube
     - firewall
+    - deploy-user
