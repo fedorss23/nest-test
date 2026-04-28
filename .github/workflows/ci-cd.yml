@@ -94,7 +94,6 @@ jobs:
             cd nest-test
 
             docker build -t myapp:latest .
-            minikube image load myapp:latest
 
             cd k8s
             kubectl apply -f namespace.yml
