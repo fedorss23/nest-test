@@ -89,10 +89,6 @@ jobs:
             mkdir project
             cd project
 
-            minikube start
-
-            minikube addons enable ingress
-
             git init
             git clone https://github.com/fedorss23/nest-test.git
             cd nest-test
