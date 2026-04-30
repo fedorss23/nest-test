@@ -76,6 +76,7 @@ jobs:
           repository: fedorss23/nest-infra
           token: ${{ secrets.GH_PAT }}
           path: infra
+          persist-credentials: false
 
       - name: Update deployment image
         run: |
