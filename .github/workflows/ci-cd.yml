@@ -81,7 +81,8 @@ jobs:
       - name: Update deployment image
         run: |
           cd infra
-          sed -i "s|image: .*myapp:.*|image: ${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}|" apps/myapp/deployment.yaml
+          ls
+          sed -i "s|image: .*myapp:.*|image: ${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}|" nest-infra/apps/myapp/deployment.yaml
 
       - name: Commit infra update
         run: |
