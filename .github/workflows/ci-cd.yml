@@ -43,9 +43,9 @@ jobs:
 
       - name: Build app
         run: yarn build
-    
-  provisions:
-    name: Install deps and inc
+
+  image:
+    name: Push image
     runs-on: ubuntu-latest
 
     needs: [test, build]
@@ -53,52 +53,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup bootstrap key
+      - name: Logit to Dockerhub
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.BOOTSTRAP_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_NAME }}" --password-stdin
 
-      - name: Add server to known_hosts
+      - name: Push image
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-      
-      - name: Run ansible
-        env: 
-          DEPLOY_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-        run: |
-          ansible-playbook -i ansible/inventory.ini ansible/site.yml
-
-  deploy:
+          docker build -t "${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}" .
+          docker push "${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}"
+    
+  change-image:
+    name: Change image
     runs-on: ubuntu-latest
-    needs: [test, build, provisions]
+
+    needs: [test, build, image]
 
     steps:
-      - name: Checkout
+      - uses: actions/checkout@v4
+
+      - name: Checkout infra repo
         uses: actions/checkout@v4
-
-      - name: Deploy with ssh
-        uses: appleboy/ssh-action@v1.0.2
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            rm -rf project
-            mkdir project
-            cd project
+          repository: fedorss23/nest-infra
+          token: ${{ secrets.GH_PAT }}
+          path: infra
 
-            git init
-            git clone https://github.com/fedorss23/nest-test.git
-            cd nest-test
+      - name: Update deployment image
+        run: |
+          cd infra
+          sed -i "s|image: .*myapp:.*|image: ${{ secrets.DOCKERHUB_NAME }}/myapp:${{ github.sha }}|" apps/myapp/deployment.yaml
 
-            docker build -t myapp:latest .
+      - name: Commit infra update
+        run: |
+          cd infra
+          git config user.name "fedorss23"
+          git config user.email "lesssa886@gmail.com"
 
-            cd k8s
-            kubectl apply -f namespace.yml
-            kubectl apply -f backend/deployment.yml
-            kubectl apply -f backend/service.yml
-            kubectl apply -f ingress/ingress.yml
+          git add .
+          git commit -m "update image to ${{ github.sha }}"
+          git push
 
-      
