@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    
+
 
 jobs:
   test:
@@ -91,7 +91,7 @@ jobs:
           git config user.email "lesssa886@gmail.com"
 
           git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/fedorss23/nest-infra.git
-
+  
           git add .
           git commit -m "update image to ${{ github.sha }}"
           git push
